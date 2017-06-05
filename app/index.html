@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ENS Loan Registrar</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src="https://use.fontawesome.com/4cb6f345c4.js"></script>
+  <script src="./app.js"></script>
+</head>
+
+<body ng-app="LoanRegistrarApp">
+  <div class="container" ng-cloak>
+      <br>
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#loan-registrar" aria-controls="loan-registrar" role="tab" data-toggle="tab">Loan Registrar</a></li>
+        <li role="presentation"><a href="#ens-registrar" aria-controls="ens-registrar" role="tab" data-toggle="tab">ENS Registrar</a></li>
+      </ul>
+
+      <div class="tab-content">
+        <br>
+        <div ng-controller="LoanRegistrarCtrl" role="tabpanel" class="tab-pane active" id="loan-registrar">
+          <div class="row">
+
+            <div class="col-md-6">
+              <div class="panel panel-default">
+                <div class="panel-heading">Apply Loan</div>
+                <div class="panel-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="">Domain</label>
+                      <input ng-model="domainName" type="text" class="form-control"></input>
+                    </div>
+                    <div class="form-group">
+                      <button ng-click="checkDomainStatus()" class="btn btn-primary">Submit</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div ng-controller="ENSRegistrarCtrl" role="tabpanel" class="tab-pane" id="ens-registrar">
+          <div class="row">
+
+            <div class="col-md-6">
+              <div class="panel panel-default">
+                <div class="panel-heading">Check Domain</div>
+                <div class="panel-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="">Name</label>
+                      <input ng-disabled="ENS_objHasData" type="text" ng-model="ENS_obj.name" class="form-control"></input>
+                    </div>
+                    <div class="form-group">
+                      <button ng-disabled="ENS_objHasData" ng-click="checkName()" class="btn btn-primary">Submit</button>
+                      <button ng-click="resetENS()" class="btn btn-primary">Reset</button>
+                    </div>
+                  </form>
+                  <hr>
+                  <br>
+                  <div ng-if="ENS_objHasData">
+                    <ul class="list-group">
+                      <li class="list-group-item">Status: <span class="text-bold">{{ENS_obj.status}}</span></li>
+                      <li ng-if="ENS_obj.status != 'Open'" class="list-group-item">Winning Deed: <span class="text-bold">{{ENS_obj.deed}}</span></li>
+                      <li ng-if="ENS_obj.status != 'Open'" class="list-group-item">Registration Date: <span class="text-bold">{{ENS_obj.registrationDate}}</span></li>
+                      <li ng-if="ENS_obj.status != 'Open'" class="list-group-item">Value: <span class="text-bold">{{ENS_obj.value | currency: '' : 6}}</span></li>
+                      <li ng-if="ENS_obj.status != 'Open'" class="list-group-item">Highest Bid: <span class="text-bold">{{ENS_obj.highestBid | currency: '' : 6}}</span></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" ng-if="ENS_obj.status=='Open' || ENS_obj.status=='Auction'">
+              <div class="panel panel-default">
+                <div class="panel-heading" ng-if="ENS_obj.status=='Open'">Start Auction and Bid</div>
+                <div class="panel-heading" ng-if="ENS_obj.status=='Auction'">Bid</div>
+                <div class="panel-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="">Ether Amount</label>
+                      <input ng-model="ENS_obj.amount" type="text" class="form-control"></input>
+                    </div>
+                    <div class="form-group" ng-if="ENS_obj.status=='Open'">
+                      <button ng-click="startAuctionsAndBid()" class="btn btn-primary">Submit</button>
+                    </div>
+                    <div class="form-group" ng-if="ENS_obj.status=='Auction'">
+                      <button ng-click="submitBid()" class="btn btn-primary">Submit</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" ng-if="ENS_obj.status=='Reveal'">
+              <div class="panel panel-default">
+                <div class="panel-heading">Reveal Bid</div>
+                <div class="panel-body">
+                  <form>
+                    <div class="form-group">
+                      <button class="btn btn-primary">Reveal My Bid</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6" ng-if="ENS_obj.status=='Owned'">
+              <div class="panel panel-default">
+                <div class="panel-heading">Finalize Auction</div>
+                <div class="panel-body">
+                  <form>
+                    <div class="form-group">
+                      <button class="btn btn-primary">Claim Domain</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </div>
+</body>
+</html>
